@@ -11,8 +11,8 @@ from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms
 
-from telegram import Bot, Update
-from telegram.ext import MessageHandler, Filters, Dispatcher
+from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import MessageHandler, Filters, Dispatcher, CallbackQueryHandler
 from telegram.ext import CommandHandler
 
 from chat_manager.chat_manager import ChatManager
@@ -95,33 +95,46 @@ def patch_msg_data(data):
 
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=f"Бобро поржаловать")
+    keyboard = [[InlineKeyboardButton("Жалоба", callback_data='сбер плохо себя вел'),
+                 InlineKeyboardButton("Другое", callback_data='другое')]]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     manager.start_user_chat(update.message.chat_id)
     socketio.emit('my_response',
                   {'data': 'Server generated VERY SPECIAL event', 'count': 0},
                   namespace='/test')
+    update.message.reply_text('Please choose:', reply_markup=reply_markup)
+
+def button(bot, update):
+    query = update.callback_query
+    bot.send_message(chat_id=query.message.chat_id, text=query.data)
+    process_text(query.message.chat_id, query.data, bot)
+    bot.send_message(chat_id=query.mesage.chat_id, text=query.data)
 
 
-def callback_alarm(bot, job):
-    bot.send_message(chat_id=job.context, text='Ваше обращение было зарегистрировано. Удачного дня')
-    manager.operator_chats[job.context] = False
+def process_text(chat_id, text, bot):
+    room = manager.chat_room(chat_id)
+    bot.send_message(chat_id=chat_id, text='чет пришло')
+    socketio.emit('broad_response', {'chat_id': chat_id, 'room_id': room},
+                  namespace="/test",
+                  broadcast=True)
+    socketio.emit('my_response', {'data': f'{text}', 'count': 0},
+                  namespace="/test",
+                  room=str(room))
+    if manager.is_bot_session(chat_id):
+        manager.store_message_to_bot(text, chat_id)
+        message_to_bot_str = json.dumps(make_to_message(text, chat_id))
+        logger.info("Try to send to AI: {}.".format(message_to_bot_str))
+        publisher.send(json.dumps(message_to_bot_str), chat_id, "compliance")
+        bot.send_message(chat_id=chat_id, text='записали в кафку')
 
 
 def userinput(bot, update):
     chatid = update.message.chat_id
     manager.start_user_chat(chatid)
-    room = manager.chat_room(chatid)
-    bot.send_message(chat_id=chatid, text='чет пришло')
-    socketio.emit('broad_response', {'data': f'Chatroom:{chatid} available: {room}', 'count': 0},
-                  namespace="/test",
-                  broadcast=True)
-    socketio.emit('my_response', {'data': f'{update.message.text}', 'count': 0},
-                  namespace="/test",
-                  room=str(room))
-    if manager.is_bot_session(chatid):
-        manager.store_message_to_bot(update.message.text, chatid)
-        message_to_bot_str = json.dumps(make_to_message(update.message.text, chatid))
-        logger.info("Try to send to AI: {}.".format(message_to_bot_str))
-        publisher.send(json.dumps(message_to_bot_str), chatid, "compliance")
+    process_text(chatid, update.message.text, bot)
+
 
 
 
@@ -129,6 +142,7 @@ start_handler = CommandHandler('start', start)
 user_handler = MessageHandler(None, userinput)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(user_handler)
+dispatcher.add_handler(CallbackQueryHandler(button))
 thread_bot = Thread(target=dispatcher.start, name='dispatcher')
 thread_bot.start()
 
@@ -220,7 +234,8 @@ def ping_pong():
 def test_connect():
     manager.operator_chats.append(request.sid)
     emit('my_response', {'data': 'Connected', 'count': 0})
-
+    for it in manager.chat_id_to_room_links:
+        emit('broad_response_connect', {'chat_id': it["chat_id"], 'room_id': it['room_id']})
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():

@@ -78,3 +78,10 @@ class ChatManager:
             self.user_chats[chat_id]["operators"].remove(op_id)
             return True
         return False
+
+    @property
+    def chat_id_to_room_links(self):
+        res = []
+        for k, v in self.user_chats.items():
+            res.append({"chat_id":k, "room_id": v["chat_room"]})
+        return res
