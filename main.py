@@ -12,7 +12,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms
 
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import MessageHandler, Filters, Dispatcher, CallbackQueryHandler
+from telegram.ext import MessageHandler, Filters, Dispatcher, CallbackQueryHandler, Updater
 from telegram.ext import CommandHandler
 
 from chat_manager.chat_manager import ChatManager
@@ -30,13 +30,14 @@ thread = None
 thread_lock = Lock()
 socketio = SocketIO(app, async_mode=async_mode)
 TOKEN = '628583227:AAEy67lVCc9iIBK-7aJgZ0XiwrKyW0E7_J4'
+updater = Updater(token='710897330:AAG00RPP6orr96luCgWnY5CV13xd6rAUKDk')
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
 rm = ResponseModel()
-bot = Bot(TOKEN)
 update_queue = Queue()
-dispatcher = Dispatcher(bot, update_queue)
+dispatcher = updater.dispatcher
+bot = updater.bot
 
 logger = logging.getLogger("logger")
 handlerFile = logging.FileHandler("compliance.log")
@@ -136,15 +137,18 @@ def userinput(bot, update):
     process_text(chatid, update.message.text, bot)
 
 
-
+def poll():
+    updater.start_polling()
 
 start_handler = CommandHandler('start', start)
 user_handler = MessageHandler(None, userinput)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(user_handler)
 dispatcher.add_handler(CallbackQueryHandler(button))
-thread_bot = Thread(target=dispatcher.start, name='dispatcher')
+thread_bot = Thread(target=poll, name='dispatcher')
 thread_bot.start()
+
+
 
 
 manager = ChatManager()
