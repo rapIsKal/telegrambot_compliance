@@ -29,15 +29,16 @@ app.config['SECRET_KEY'] = 'secret!'
 thread = None
 thread_lock = Lock()
 socketio = SocketIO(app, async_mode=async_mode)
-updater = Updater(token='628583227:AAEy67lVCc9iIBK-7aJgZ0XiwrKyW0E7_J4')
+TOKEN = "628583227:AAEy67lVCc9iIBK-7aJgZ0XiwrKyW0E7_J4"
+rm = ResponseModel()
+bot = Bot(TOKEN)
+update_queue = Queue()
+dispatcher = Dispatcher(bot, update_queue)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
 rm = ResponseModel()
 update_queue = Queue()
-dispatcher = updater.dispatcher
-bot = updater.bot
-bot.delete_webhook()
 
 logger = logging.getLogger("logger")
 handlerFile = logging.FileHandler("compliance.log")
@@ -107,6 +108,7 @@ def start(bot, update):
                   namespace='/test')
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
+
 def button(bot, update):
     query = update.callback_query
     bot.send_message(chat_id=query.message.chat_id, text=query.data)
@@ -137,15 +139,12 @@ def userinput(bot, update):
     process_text(chatid, update.message.text, bot)
 
 
-def poll():
-    updater.start_polling()
-
 start_handler = CommandHandler('start', start)
 user_handler = MessageHandler(None, userinput)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(user_handler)
 dispatcher.add_handler(CallbackQueryHandler(button))
-thread_bot = Thread(target=poll, name='dispatcher')
+thread_bot = Thread(target=dispatcher.start, name='dispatcher')
 thread_bot.start()
 
 
