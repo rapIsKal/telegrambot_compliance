@@ -1,6 +1,6 @@
 TO_AI_TOPIC = "toAI"
 FROM_AI_TOPIC = "fromAI"
-KAFKA_SOCKET = "178.140.24.244:9092"
+KAFKA_SOCKET = "95.216.160.37:9092"
 
 kafka_config = {
     "consumer": {
