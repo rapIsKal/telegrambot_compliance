@@ -68,11 +68,12 @@ class KafkaListener:
     def poll(self):
         while 1:
             msg = consumer.poll()
-            value = msg.value()
-            if value:
-                sys.stderr.write("Received from AI: {}.".format(value))
-                from_bot_message = from_ai_message(value)
-                receive_from_bot(from_bot_message)
+            if msg:
+                value = msg.value()
+                if value:
+                    sys.stderr.write("Received from AI: {}.".format(value))
+                    from_bot_message = from_ai_message(value)
+                    receive_from_bot(from_bot_message)
 
 
 #  run kafka polling in another thread
