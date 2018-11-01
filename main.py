@@ -38,6 +38,7 @@ rm = ResponseModel()
 update_queue = Queue()
 dispatcher = updater.dispatcher
 bot = updater.bot
+bot.delete_webhook()
 
 logger = logging.getLogger("logger")
 handlerFile = logging.FileHandler("compliance.log")
