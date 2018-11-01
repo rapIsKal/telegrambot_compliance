@@ -57,7 +57,7 @@ def button(bot, update):
 def process_text(chat_id, text, bot):
     room = manager.chat_room(chat_id)
     bot.send_message(chat_id=chat_id, text='чет пришло')
-    socketio.emit('broad_response', {'data': f'Chatroom:{chat_id} available: {room}', 'count': 0},
+    socketio.emit('broad_response', {'chat_id': chat_id, 'room_id': room},
                   namespace="/test",
                   broadcast=True)
     socketio.emit('my_response', {'data': f'{text}', 'count': 0},

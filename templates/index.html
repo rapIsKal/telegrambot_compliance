@@ -33,7 +33,7 @@
                 $('#log').append('<br>' + $('<div/>').text('Received: ' + msg.data).html());
             });
             socket.on('broad_response', function(msg) {
-                $('#broad').append('<br>' + $('<div/>').text('Received: ' + msg.data).html());
+                $('#broad').append('<br>' + $('<div/>').text('Received: ' + msg.chat_id + " " + msg.room_id).html());
             });
             socket.on('broad_response_connect', function(msg) {
                 $('#broad').append('<br>' + $('<div/>').text('Received: Chat id: ' + msg.chat_id + ' room id: ' +msg.room_id).html());
