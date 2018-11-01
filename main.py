@@ -29,8 +29,7 @@ app.config['SECRET_KEY'] = 'secret!'
 thread = None
 thread_lock = Lock()
 socketio = SocketIO(app, async_mode=async_mode)
-TOKEN = '628583227:AAEy67lVCc9iIBK-7aJgZ0XiwrKyW0E7_J4'
-updater = Updater(token='710897330:AAG00RPP6orr96luCgWnY5CV13xd6rAUKDk')
+updater = Updater(token='628583227:AAEy67lVCc9iIBK-7aJgZ0XiwrKyW0E7_J4')
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
