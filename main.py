@@ -52,18 +52,33 @@ consumer = KafkaConsumer(kafka_config, logger)
 publisher = KafkaPublisher(kafka_config, logger)
 
 
-def receive_from_bot(payload):
-    ans = payload["messages"]
-    chatid = payload["uuid"]["chatId"]
+def _filter_user_messages(messages):
+    user_messages = []
+
+    for message in messages:
+        if message["message_name"] == "ANSWER_TO_USER":
+            user_messages.append(message)
+    return user_messages
+
+
+def receive_from_bot(from_bot_message):
+    chatid = from_bot_message["uuid"]["chatId"]
     room = manager.chat_room(chatid)
 
-    manager.store_message_from_bot(ans, chatid)
-    bot.send_message(chat_id=chatid, text=ans)
-    socketio.emit('my_response', {'data': f'{ans}', 'count': 0},
+    messages = from_bot_message["messages"]
+    user_messages = _filter_user_messages(messages)
+
+    user_messages_str = json.dumps(user_messages)
+    all_messages_str = json.dumps(from_bot_message)
+
+    manager.store_message_from_bot(all_messages_str, chatid)
+    bot.send_message(chat_id=chatid, text=user_messages_str)
+    socketio.emit('my_response', {'data': f'{from_bot_message}', 'count': 0},
                   namespace="/test",
                   room=str(room))
-    if ans == FINAL_ANSWER:
-        manager.close_bot_session(chatid)
+
+    #if ans == FINAL_ANSWER:
+    #    manager.close_bot_session(chatid)
 
 
 class KafkaListener:
