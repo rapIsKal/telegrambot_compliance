@@ -6,6 +6,7 @@ class ChatManager:
         self.user_chats = {}
         self.rooms = {}
         self.room_identifiers = 0
+        self.bot_messages = {}
 
 
     def is_user_chat_started(self, chat_id):
@@ -14,7 +15,13 @@ class ChatManager:
     def is_operator_listening(self, chat_id):
         return self.user_chats[chat_id]["operators"]
 
-    def store_message(self, msg, chat_id, bot= False):
+    def store_message_to_bot(self, msg, chat_id):
+        self._store_message(False, chat_id, msg)
+
+    def store_message_from_bot(self, msg, chat_id):
+        self._store_message(True, chat_id, msg)
+
+    def _store_message(self, bot, chat_id, msg):
         if self.user_chats[chat_id]["store_history"]:
             if bot:
                 prefix = "Ответ бота: "
