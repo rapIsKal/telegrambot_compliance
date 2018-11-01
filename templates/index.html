@@ -35,9 +35,7 @@
             socket.on('broad_response', function(msg) {
                 $('#broad').append('<br>' + $('<div/>').text('Received: ' + msg.data).html());
             });
-            socket.on('broad_response_connect', function(msg) {
-                $('#broad').append('<br>' + $('<div/>').text('Received: Chat id: ' + msg.chat_id + ' room id: ' +msg.room_id).html());
-            });
+
             // Interval function that tests message latency by sending a "ping"
             // message. The server then responds with a "pong" message and the
             // round trip time is measured.

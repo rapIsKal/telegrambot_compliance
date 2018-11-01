@@ -2,3 +2,6 @@
 venv/
 token
 app_namespace.py
+*.pyc
+*.*.pyc
+*.log
