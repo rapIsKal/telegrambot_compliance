@@ -6,3 +6,5 @@ app_namespace.py
 *.*.pyc
 *.log
 tmp/
+.pytest*
+env/
